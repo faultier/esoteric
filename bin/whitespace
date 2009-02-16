@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby
+# vim: filetype=ruby fileencoding=utf-8 :
+
+require 'esoteric'
+require 'esoteric/compiler/whitespace'
+ESOTERIC_BIN_VERSION = Esoteric::Compiler::Whitespace::VERSION unless defined?(ESOTERIC_BIN_VERSION)
+
+require 'esoteric/runner'
+Esoteric::Runner.run($source, Esoteric::Compiler::Whitespace, Esoteric::VM, $options)
