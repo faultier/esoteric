@@ -1,0 +1,37 @@
+
+= esoteric
+
+by faultier <roteshund+github@gmail.com>
+
+== Description
+
+    Esoteric language compilers and virtual machine
+
+== Installation
+
+=== Archive Installation
+
+	rake install
+
+=== Gem Installation
+
+	gem install faultier-esoteric
+
+=== Git Repository
+
+Hosted by GitHub[http://github.com/faultier/esoteric/tree/master]
+
+    git clone git://github.com/faultier/hanmyo.git
+
+== Features/Problems
+
+* しょうもない言語ばかりなのが一番の問題
+
+== Synopsis
+
+
+== Copyright
+
+Author::    faultier <roteshund+github@gmail.com>
+Copyright:: Copyright (c) 2009 faultier
+License::   Ruby's
