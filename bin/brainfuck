@@ -1,0 +1,10 @@
+#!/usr/bin/env ruby
+# vim: filetype=ruby fileencoding=utf-8 :
+
+require 'esoteric'
+require 'esoteric/compiler/brainfuck'
+require 'ruby2ruby'
+require 'pp'
+
+pp ast = Esoteric::Compiler::Brainfuck.compile('++++++[>++++++++++<-]>+++++.<++++++++++.')
+eval Ruby2Ruby.new.process(Unifier.new.process(ast))
