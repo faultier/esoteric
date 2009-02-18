@@ -14,7 +14,7 @@ include FileUtils
 NAME              = "esoteric"
 AUTHOR            = "faultier"
 EMAIL             = "roteshund+github@gmail.com"
-DESCRIPTION       = ""
+DESCRIPTION       = "Esoteric langage compilers and virtual machines"
 HOMEPATH          = "http://blog.livedoor.jp/faultier/"
 BIN_FILES         = %w(esm whitespace dt)
 
@@ -49,6 +49,8 @@ spec = Gem::Specification.new do |s|
 	s.bindir            = "bin"
 	s.require_path      = "lib"
 	#s.autorequire       = ""
+
+  s.add_dependency('sexp_processor', '>= 3.0.1')
 
 	s.required_ruby_version = '>= 1.8.6'
 

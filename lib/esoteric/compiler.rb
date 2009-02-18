@@ -1,28 +1,35 @@
 # coding: utf-8
 
 require 'logger'
+require 'sexp_processor'
 
 module Esoteric
   module Compiler
     class Base
-      def self.compile(src, logger=nil)
+      def self.compile(src, optimize = false, logger = nil)
         new(src, logger).compile
       end
 
-      def initialize(src, logger=nil)
-        @src = normalize(src)
+      def initialize(src, logger = nil)
+        @src    = normalize(src)
+        @ast    = []
         unless @logger = logger
           @logger = Logger.new(STDOUT)
           @logger.level = Logger::ERROR
         end
       end
 
-      def compile
-        insns = []
-        while st = step
-          insns.push st
+      def compile(optimize = false)
+        while exp = process
+          if exp.first == :defn
+            @ast.unshift exp
+          else
+            @ast.push exp
+          end
         end
-        insns.map {|c,a| a.nil? ? c.to_s : "#{c}\t#{a}"}.join("\n")
+        @ast.unshift :block
+        p @ast
+        Sexp.from_array(@ast)
       end
 
       private 
@@ -31,21 +38,8 @@ module Esoteric
         src
       end
 
-      def step
+      def process
         nil
-      end
-
-      def command(name, arg=nil)
-        case name
-        when :push,:copy,:slide               then [name, numeric(arg)]
-        when :label,:call,:jump,:jumpz,:jumpn then [name, string(arg)]
-        when :dup,:swap,:discard              then [name]
-        when :add,:sub,:mul,:div,:mod         then [name]
-        when :hwrite,:hread                   then [name]
-        when :return,:exit                    then [name]
-        when :cout,:nout,:cin,:nin            then [name]
-        else raise SyntaxError
-        end
       end
 
       def numeric(value)

@@ -2,9 +2,10 @@
 # vim: filetype=ruby fileencoding=utf-8 :
 
 require 'esoteric'
+require 'esoteric/easyvm'
 require 'esoteric/compiler/brainfuck'
-require 'ruby2ruby'
-require 'pp'
+ESOTERIC_BIN_VERSION = Esoteric::Compiler::Brainfuck::VERSION unless defined?(ESOTERIC_BIN_VERSION)
 
-pp ast = Esoteric::Compiler::Brainfuck.compile('++++++[>++++++++++<-]>+++++.<++++++++++.')
-eval Ruby2Ruby.new.process(Unifier.new.process(ast))
+require 'esoteric/runner'
+
+Esoteric::Runner.run($source, Esoteric::Compiler::Brainfuck, Esoteric::EasyVM, $options)

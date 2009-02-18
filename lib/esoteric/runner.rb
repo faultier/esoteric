@@ -10,11 +10,11 @@ module Esoteric
       if options[:interactive]
         raise NotImplementedError
       else
-        esm = !!compiler ? compiler.compile(source) : source
+        ast = !!compiler ? compiler.compile(source) : source
         if options[:checkonly]
           puts 'Syntax OK'
         else
-          vm.run esm, logger
+          vm.run ast, logger
         end
       end
     end
