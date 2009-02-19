@@ -1,8 +1,6 @@
 # coding: utf-8
 
 module Esoteric
-  class LoopInterrapt < StandardError; end
-
   module Compiler
     class Brainfuck < Base
       VERSION = '0.0.1'
@@ -11,8 +9,8 @@ module Esoteric
         super
         @p   = 0
         @ast = [
-          [:gasgn, :$pc, [:lit, 0]],
-          [:gasgn, :$tape, [:array]],
+          exp_gasgn(:pc, exp_literal(0)),
+          exp_gasgn(:tape, [:array]),
           [:defn, :get_value,
             [:scope,
               [:block,
@@ -40,23 +38,32 @@ module Esoteric
         src.gsub(/[^><+-.,\[\]]/, '').split(//)
       end 
 
+      def next_token
+        @src[@p]
+      end
+
       def process
-        exp = case @src[@p]
-              when '>' then [:gasgn, :$pc, [:call, [:gvar, :$pc], :+, [:arglist, [:lit, 1]]]]
-              when '<' then [:gasgn, :$pc, [:call, [:gvar, :$pc], :-, [:arglist, [:lit, 1]]]]
-              when '+' then [:call, nil, :set_value, [:arglist, [:call, [:call, nil, :get_value, [:arglist]], :+, [:arglist, [:lit, 1]]]]]
-              when '-' then [:call, nil, :set_value, [:arglist, [:call, [:call, nil, :get_value, [:arglist]], :-, [:arglist, [:lit, 1]]]]]
-              when '.' then [:call, nil, :print, [:arglist, [:call, [:call, nil, :get_value, [:arglist]], :chr, [:arglist]]]]
-              when ',' then [:call, nil, :set_value, [:arglist, [:call, [:call, nil, :getc, [:arglist]], :ord, [:arglist]]]]
+        exp = case next_token
+              when '>' then exp_opgasgn :pc, :+, exp_literal(1)
+              when '<' then exp_opgasgn :pc, :+, exp_literal(-1)
+              when '+' then
+                exp_fcall :set_value, exp_mcall( exp_fcall(:get_value), :+, exp_literal(1))
+              when '-' then
+                exp_fcall :set_value, exp_mcall( exp_fcall(:get_value), :+, exp_literal(-1))
+              when '.' then
+                exp_fcall :print, exp_mcall( exp_fcall(:get_value), :chr )
+              when ',' then
+                exp_fcall :set_value, exp_mcall( exp_fcall(:getc), :ord )
               when '[' then
                 @p += 1
-                block = [:block]
-                begin 
-                  loop { block << process }
-                rescue LoopInterrapt
-                  #nothing to do
-                end
-                [:until, [:call, [:call, nil, :get_value, [:arglist]], :==, [:arglist, [:lit, 0]]], block, true]
+                [:until,
+                  [:call,
+                    [:call, nil,:get_value, [:arglist]],
+                    :==,
+                    [:arglist, [:lit, 0]]],
+                  process_until(lambda { |t| t == ']' }),
+                  nil
+                ]
               when ']' then raise LoopInterrapt
               end
         @p += 1

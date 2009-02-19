@@ -3,7 +3,8 @@
 
 require 'esoteric'
 require 'esoteric/compiler/dt'
+require 'esoteric/easyvm'
 ESOTERIC_BIN_VERSION = Esoteric::Compiler::DT::VERSION unless defined?(ESOTERIC_BIN_VERSION)
 
 require 'esoteric/runner'
-Esoteric::Runner.run($source, Esoteric::Compiler::DT, Esoteric::VM, $options)
+Esoteric::Runner.run($source, Esoteric::Compiler::DT, Esoteric::EasyVM, $options)

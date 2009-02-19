@@ -10,16 +10,16 @@ module Esoteric
     end
 
     def initialize(ast, logger = nil)
-      @sexp      = ast#Unifier.new.process(ast)
+      @ast       = Sexp.from_array(ast)
       @processor = Ruby2Ruby.new
     end
 
     def run
       # これじゃああんまりにもあんまりなので
       # 抽象構文木を実行できるVMをあとで作る
-      p @sexp
-      puts code = @processor.process(@sexp)
-      eval code
+#     puts code = @processor.process(@ast)
+#     eval code
+      eval @processor.process(@ast)
     end
   end
 end
