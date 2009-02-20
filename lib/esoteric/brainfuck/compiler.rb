@@ -1,8 +1,8 @@
 # coding: utf-8
 
 module Esoteric
-  module Compiler
-    class Brainfuck < Base
+  module Brainfuck
+    class Compiler < Esoteric::Compiler::Base
       VERSION = '0.0.1'
 
       def initialize(src, logger = nil)

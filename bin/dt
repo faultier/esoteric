@@ -1,10 +1,9 @@
 #!/usr/bin/env ruby
 # vim: filetype=ruby fileencoding=utf-8 :
 
-require 'esoteric'
-require 'esoteric/compiler/dt'
-require 'esoteric/easyvm'
-ESOTERIC_BIN_VERSION = Esoteric::Compiler::DT::VERSION unless defined?(ESOTERIC_BIN_VERSION)
-
+require 'esoteric/dt'
 require 'esoteric/runner'
-Esoteric::Runner.run($source, Esoteric::Compiler::DT, Esoteric::EasyVM, $options)
+require 'esoteric/easyvm'
+$esoteric_bin_version = "#{Esoteric::VERSION::SUMMARY}, #{Esoteric::DT::VERSION::SUMMARY}"
+source, options = Esoteric::Runner.parse_option
+Esoteric::Runner.run(source, Esoteric::DT::Compiler, Esoteric::EasyVM, options)

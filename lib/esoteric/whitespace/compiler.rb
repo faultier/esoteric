@@ -1,45 +1,40 @@
 # coding: utf-8
 
-if RUBY_VERSION =~ /^1\.8\./
-  $KCODE = 'u'
-  require 'jcode'
-end
-
 require 'strscan'
 
 module Esoteric
-  module Compiler
-    class DT < Base
+  module Whitespace
+    class Compiler < Esoteric::Compiler::Base
       VERSION = '0.0.2'
 
-      NVAL    = /((?:ど|童貞ちゃうわっ！)+)…/
+      NVAL    = /([ \t]+)\n/
       LVAL    = NVAL
-      PUSH    = /どど#{NVAL}/
-      DUP     = /ど…ど/
-      COPY    = /ど童貞ちゃうわっ！ど#{NVAL}/
-      SWAP    = /ど…童貞ちゃうわっ！/
-      DISCARD = /ど……/
-      SLIDE   = /ど童貞ちゃうわっ！…#{NVAL}/
-      ADD     = /童貞ちゃうわっ！どどど/
-      SUB     = /童貞ちゃうわっ！どど童貞ちゃうわっ！/
-      MUL     = /童貞ちゃうわっ！どど…/
-      DIV     = /童貞ちゃうわっ！ど童貞ちゃうわっ！ど/
-      MOD     = /童貞ちゃうわっ！ど童貞ちゃうわっ！童貞ちゃうわっ！/
-      HWRITE  = /童貞ちゃうわっ！童貞ちゃうわっ！ど/
-      HREAD   = /童貞ちゃうわっ！童貞ちゃうわっ！童貞ちゃうわっ！/
-      LABEL   = /…どど#{LVAL}/
-      CALL    = /…ど童貞ちゃうわっ！#{LVAL}/
-      JUMP    = /…ど…#{LVAL}/
-      JUMPZ   = /…童貞ちゃうわっ！ど#{LVAL}/
-      JUMPN   = /…童貞ちゃうわっ！童貞ちゃうわっ！#{LVAL}/
-      RETURN  = /…童貞ちゃうわっ！…/
-      EXIT    = /………/
-      COUT    = /童貞ちゃうわっ！…どど/
-      NOUT    = /童貞ちゃうわっ！…ど童貞ちゃうわっ！/
-      CIN     = /童貞ちゃうわっ！…童貞ちゃうわっ！ど/
-      NIN     = /童貞ちゃうわっ！…童貞ちゃうわっ！童貞ちゃうわっ！/
+      PUSH    = /  #{NVAL}/
+      DUP     = / \n /
+      COPY    = / \t #{NVAL}/
+      SWAP    = / \n\t/
+      DISCARD = / \n\n/
+      SLIDE   = / \t\n#{NVAL}/
+      ADD     = /\t   /
+      SUB     = /\t  \t/
+      MUL     = /\t  \n/
+      DIV     = /\t \t /
+      MOD     = /\t \t\t/
+      HWRITE  = /\t\t /
+      HREAD   = /\t\t\t/
+      LABEL   = /\n  #{LVAL}/
+      CALL    = /\n \t#{LVAL}/
+      JUMP    = /\n \n#{LVAL}/
+      JUMPZ   = /\n\t #{LVAL}/
+      JUMPN   = /\n\t\t#{LVAL}/
+      RETURN  = /\n\t\n/
+      EXIT    = /\n\n\n/
+      COUT    = /\t\n  /
+      NOUT    = /\t\n \t/
+      CIN     = /\t\n\t /
+      NIN     = /\t\n\t\t/
 
-      def initialize(src, logger=nil)
+      def initialize(src,logger=nil)
         super
         @s = StringScanner.new(@src)
         @ast = [
@@ -68,13 +63,10 @@ module Esoteric
         @ast
       end
 
-
       private
 
       def normalize(src)
-        normalized = ''
-        normalized << $1 while src.sub!(/(ど|童貞ちゃうわっ！|…)/, '*')
-        normalized
+        src.gsub(/[^ \t\n]/, '')
       end
 
       def process
@@ -133,17 +125,17 @@ module Esoteric
       end
 
       def numeric(value)
-        raise ArgumentError if "#{value}…" !~ /\A#{NVAL}\z/
-        n = value.sub(/\Aど/, '+').
-                  sub(/\A童貞ちゃうわっ！/, '-').
-                  gsub(/ど/, '0').
-                  gsub(/童貞ちゃうわっ！/, '1')
+        raise ArgumentError if "#{value}\n" !~ /\A#{NVAL}\z/
+        n = value.sub(/\A /, '+').
+                  sub(/\A\t/, '-').
+                  gsub(/ /, '0').
+                  gsub(/\t/, '1')
         n.to_i(2)
       end
 
       def string(value)
-        raise ArgumentError if "#{value}…" !~ /\A#{LVAL}\z/
-        value.sub(/ど/, 'd').sub(/童貞ちゃうわっ！/, 'D')
+        raise ArgumentError if "#{value}\n" !~ /\A#{LVAL}\z/
+        value.gsub(/ /, 's').gsub(/\t/, 't')
       end
     end
   end

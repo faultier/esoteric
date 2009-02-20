@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby
+# vim: filetype=ruby fileencoding=utf-8 :
+
+require 'esoteric/brainfuck'
+require 'esoteric/runner'
+require 'esoteric/easyvm'
+$esoteric_bin_version = "#{Esoteric::VERSION::SUMMARY}, #{Esoteric::Brainfuck::VERSION::SUMMARY}"
+source, options = Esoteric::Runner.parse_option
+Esoteric::Runner.run(source, Esoteric::Brainfuck::Compiler, Esoteric::EasyVM, options)

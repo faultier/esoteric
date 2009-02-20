@@ -4,6 +4,23 @@ require 'logger'
 
 module Esoteric
   class Runner
+    def self.parse_option
+      require 'optparse'
+      source   = nil
+      options  = {}
+      OptionParser.new {|opt|
+        opt.on('-e EXPR') {|v| source = v }
+        opt.on('-i','--interactive') { options[:interactive] = true }
+        opt.on('-c','--check-only') { options[:checkonly] = true }
+        opt.on('-d','--debug') { options[:loglevel] = Logger::DEBUG }
+        opt.on('-w','--warning') { options[:loglevel] ||= Logger::WARN }
+        opt.on('-v','--version') { puts $esoteric_bin_version; exit 0 }
+        opt.parse!(ARGV)
+      }
+      source = ARGF.read unless source
+      return source, options
+    end
+
     def self.run(source, compiler, vm, options={}, logger=nil)
       logger ||= Logger.new(STDOUT)
       logger.level = options[:loglevel] if !!options[:loglevel]
@@ -19,20 +36,4 @@ module Esoteric
       end
     end
   end
-end
-
-if defined?(ESOTERIC_BIN_VERSION)
-  require 'optparse'
-  $source   = nil
-  $options  = {}
-  OptionParser.new {|opt|
-    opt.on('-e EXPR') {|v| $source = v }
-    opt.on('-i','--interactive') { $options[:interactive] = true }
-    opt.on('-c','--check-only') { $options[:checkonly] = true }
-    opt.on('-d','--debug') { $options[:loglevel] = Logger::DEBUG }
-    opt.on('-w','--warning') { $options[:loglevel] ||= Logger::WARN }
-    opt.on('-v','--version') { puts ESOTERIC_BIN_VERSION; exit 0 }
-    opt.parse!(ARGV)
-  }
-  $source = ARGF.read unless $source
 end

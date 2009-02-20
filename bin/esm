@@ -1,8 +1,0 @@
-#!/usr/bin/env ruby
-# vim: filetype=ruby fileencoding=utf-8 :
-
-require 'esoteric'
-ESOTERIC_BIN_VERSION = "essembler #{Esoteric::VERSION::STRING}" unless defined?(ESOTERIC_BIN_VERSION)
-
-require 'esoteric/runner'
-Esoteric::Runner.run($source, nil, Esoteric::VM, $opitons)
