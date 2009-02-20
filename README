@@ -5,7 +5,7 @@ by faultier <roteshund+github@gmail.com>
 
 == Description
 
-    Esoteric language compilers and virtual machine
+    Esoteric language parsers/compilers and virtual machine
 
 == Installation
 
@@ -25,6 +25,11 @@ Hosted by GitHub[http://github.com/faultier/esoteric/tree/master]
 
 == Features/Problems
 
+* Whitespace parser
+* DT parser
+* Brainf*ck parser
+* てってってー[http://kugyu.info/?page=%A5%D7%A5%ED%A5%B0%A5%E9%A5%E0%B8%C0%B8%EC%A1%D6%A4%C6%A4%C3%A4%C6%A4%C3%A4%C6%A1%BC%A1%D7] parser
+* Ruby AST を実行するVM (できてない)
 * しょうもない言語ばかりなのが一番の問題
 
 == Synopsis
