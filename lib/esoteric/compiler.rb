@@ -77,7 +77,7 @@ module Esoteric
       end
 
       def exp_defn(name, *args)
-        [:defn, name, exp_defn_arglist(args), [:scope, yield]]
+        [:defn, name, [:scope, [:block, exp_defn_arglist(args), yield]]]
       end
 
       def exp_mcall(receiver, name, *args)
