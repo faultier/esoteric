@@ -21,13 +21,13 @@ module Esoteric
       return source, options
     end
 
-    def self.run(source, compiler, vm, options={}, logger=nil)
+    def self.run(source, parser, vm, options={}, logger=nil)
       logger ||= Logger.new(STDOUT)
       logger.level = options[:loglevel] if !!options[:loglevel]
       if options[:interactive]
         raise NotImplementedError
       else
-        ast = !!compiler ? compiler.compile(source) : source
+        ast = parser.parse(source)
         if options[:checkonly]
           puts 'Syntax OK'
         else

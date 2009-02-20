@@ -9,7 +9,7 @@ require 'strscan'
 
 module Esoteric
   module Tetete
-    class Compiler < Esoteric::Compiler::Base
+    class Parser < Esoteric::Parser
       def initialize(src, logger = nil)
         super
         @s = StringScanner.new(@src)
@@ -23,7 +23,7 @@ module Esoteric
         ]
       end
 
-      def compile(do_optimize = false)
+      def parse
         begin
           loop do
             exp = process

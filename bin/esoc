@@ -1,0 +1,48 @@
+#!/usr/bin/env ruby
+# vim: filetype=ruby fileencoding=utf-8
+
+require 'esoteric/brainfuck'
+require 'esoteric/dt'
+require 'esoteric/tetete'
+require 'esoteric/whitespace'
+require 'optparse'
+require 'ruby2ruby'
+
+options = {
+  :outfile => 'eso.out',
+}
+OptionParser.new { |opt|
+  opt.on('-o FILENAME') { |v| options[:outfile] = v }
+  opt.on('-l LANGNAME', '--language=LANGNAME') { |v| options[:language] = v }
+  opt.on('-v', '--version') {
+    puts <<-"EOS"
+esoteric #{Esoteric::VERSION}
+ruby2ruby #{Ruby2Ruby::VERSION}
+    EOS
+    exit 0
+  }
+
+  opt.parse!(ARGV)
+}
+
+options[:language] ||= case ARGV.first
+                       when /\.bf\z/  then 'brainfuck'
+                       when /\.dt\z/  then 'dt'
+                       when /\.ttt\z/ then 'てってってー'
+                       when /\.ws\z/  then 'whitespace'
+                       end
+
+parser = case options[:language]
+         when /\A(brainf[u*]ck|bf)\z/  then Esoteric::Brainfuck::Parser
+         when 'dt'                     then Esoteric::DT::Parser
+         when 'てってってー','tetete'  then Esoteric::Tetete::Parser
+         when 'whitespace','ws'        then Esoteric::Whitespace::Parser
+         end
+
+ast       = parser.parse(ARGF.read)
+processor = Ruby2Ruby.new
+
+open(options[:outfile], 'w+') { |f|
+  f.print %(#!/usr/bin/env ruby\n# coding: utf-8\n#{processor.process(Sexp.from_array(ast))})
+  f.chmod 0755
+}

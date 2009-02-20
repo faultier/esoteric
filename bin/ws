@@ -4,6 +4,6 @@
 require 'esoteric/whitespace'
 require 'esoteric/runner'
 require 'esoteric/easyvm'
-$esoteric_bin_version = "#{Esoteric::VERSION::SUMMARY}, #{Esoteric::Whitespace::VERSION::SUMMARY}"
+$esoteric_bin_version = "esoteric #{Esoteric::VERSION}, Whitespace #{Esoteric::Whitespace::VERSION}"
 source, options = Esoteric::Runner.parse_option
-Esoteric::Runner.run(source, Esoteric::Whitespace::Compiler, Esoteric::EasyVM, options)
+Esoteric::Runner.run(source, Esoteric::Whitespace::Parser, Esoteric::EasyVM, options)

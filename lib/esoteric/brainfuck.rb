@@ -1,5 +1,10 @@
 # coding: utf-8
 
 require 'esoteric'
-require 'esoteric/brainfuck/version'
-require 'esoteric/brainfuck/compiler'
+require 'esoteric/brainfuck/parser'
+
+module Esoteric
+  module Brainfuck
+    VERSION = '0.0.1'
+  end
+end

@@ -2,9 +2,7 @@
 
 module Esoteric
   module Brainfuck
-    class Compiler < Esoteric::Compiler::Base
-      VERSION = '0.0.1'
-
+    class Parser < Esoteric::Parser
       def initialize(src, logger = nil)
         super
         @p   = 0
