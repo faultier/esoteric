@@ -16,9 +16,9 @@ AUTHOR            = "faultier"
 EMAIL             = "roteshund+github@gmail.com"
 DESCRIPTION       = "Esoteric langage compilers and virtual machines"
 HOMEPATH          = "http://blog.livedoor.jp/faultier/"
-BIN_FILES         = %w(esm whitespace dt)
+BIN_FILES         = %w(bf dt esoc tetete ws)
 
-VERS              = Esoteric::VERSION::STRING
+VERS              = Esoteric::VERSION
 REV = File.read(".svn/entries")[/committed-rev="(d+)"/, 1] rescue nil
 CLEAN.include ['**/.*.sw?', '*.gem', '.config']
 RDOC_OPTS = [
@@ -50,7 +50,7 @@ spec = Gem::Specification.new do |s|
 	s.require_path      = "lib"
 	#s.autorequire       = ""
 
-  s.add_dependency('sexp_processor', '>= 3.0.1')
+  s.add_dependency('ruby2ruby', '>= 1.2.2')
 
 	s.required_ruby_version = '>= 1.8.6'
 

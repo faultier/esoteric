@@ -4,6 +4,8 @@
 
 == 0.0.2 / 2009-02-20
 
-* Brainf*ckのコンパイラを追加
-* てってってーのコンパイラを追加 (see also: http://kugyu.info/?page=%A5%D7%A5%ED%A5%B0%A5%E9%A5%E0%B8%C0%B8%EC%A1%D6%A4%C6%A4%C3%A4%C6%A4%C3%A4%C6%A1%BC%A1%D7) 
+* コンパイラではないので、CompilerクラスをParserクラスに名称変更
+* Brainf*ckのパーサを追加
+* てってってーのパーサを追加 [http://kugyu.info/?page=%A5%D7%A5%ED%A5%B0%A5%E9%A5%E0%B8%C0%B8%EC%A1%D6%A4%C6%A4%C3%A4%C6%A4%C3%A4%C6%A1%BC%A1%D7]
 * 中間コードを似非アセンブラからParseTreeの抽象構文木相当のものに変更
+* Esoteric LanguageからRubyスクリプトを作るツールesocを追加
