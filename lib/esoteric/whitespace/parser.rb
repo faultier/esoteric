@@ -45,12 +45,7 @@ module Esoteric
         begin
           loop do
             exp = process
-            next unless !!exp
-            if exp.first == :defn
-              @ast.unshift exp
-            else
-              @ast.push exp
-            end
+            @ast.push exp if !!exp
           end
         rescue ProcessInterrapt
           # do nothing
@@ -74,31 +69,57 @@ module Esoteric
         when @s.scan(COPY)    then exp_push exp_gvarcall(:stack, :[], exp_literal(-(numeric(@s[1]))-1))
         when @s.scan(SWAP)    then exp_push exp_pop, exp_pop
         when @s.scan(DISCARD) then exp_pop
-        when @s.scan(SLIDE)   then
-          exp_block exp_lasgn(:top, exp_gvarcall(:stack, :pop)), exp_mcall(exp_literal(numeric(@s[1])), :times, exp_pop), exp_push(exp_lvar(:top))
-        when @s.scan(ADD)     then
-          exp_block exp_lasgn(:y, exp_pop), exp_lasgn(:x, exp_pop), exp_mcallpush(exp_lvar(:x), :+, exp_lvar(:y))
-        when @s.scan(SUB)     then
-          exp_block exp_lasgn(:y, exp_pop), exp_lasgn(:x, exp_pop), exp_mcallpush(exp_lvar(:x), :-, exp_lvar(:y))
-        when @s.scan(MUL)     then
-          exp_block exp_lasgn(:y, exp_pop), exp_lasgn(:x, exp_pop), exp_mcallpush(exp_lvar(:x), :*, exp_lvar(:y))
-        when @s.scan(DIV)     then
-          exp_block exp_lasgn(:y, exp_pop), exp_lasgn(:x, exp_pop), exp_mcallpush(exp_lvar(:x), :/, exp_lvar(:y))
-        when @s.scan(MOD)     then
-          exp_block exp_lasgn(:y, exp_pop), exp_lasgn(:x, exp_pop), exp_mcallpush(exp_lvar(:x), :%, exp_lvar(:y))
-        when @s.scan(HWRITE)  then
-          exp_block exp_lasgn(:val, exp_pop), exp_lasgn(:addr, exp_pop), exp_gvarcall(:heap, :[]=, exp_lvar(:addr), exp_lvar(:val))
-        when @s.scan(HREAD)   then
-          exp_block exp_lasgn(:addr, exp_pop), exp_push(exp_gvarcall(:heap, :[], exp_lvar(:addr)))
-        when @s.scan(LABEL)   then
-          defn(string(@s[1]).intern) { process_until( lambda {|*args| @s.eos? || !!@s.match?(RETURN)} ) }
-        when @s.scan(CALL)    then exp_fcall(string(@s[1]).intern)
+        when @s.scan(SLIDE)
+          exp_block { |block|
+            block << exp_lasgn(:top, exp_gvarcall(:stack, :pop))
+            block << exp_iterator(exp_mcall(exp_literal(numeric(@s[1])), :times)) {|internal| internal << exp_pop}
+            block << exp_push(exp_lvar(:top))
+          }
+        when @s.scan(ADD)
+          exp_block { |block|
+            block << exp_lmasgn([:y, :x], [exp_pop, exp_pop])
+            block << exp_mcallpush(exp_lvar(:x), :+, exp_lvar(:y))
+          }
+        when @s.scan(SUB)
+          exp_block { |block|
+            block << exp_lmasgn([:y, :x], [exp_pop, exp_pop])
+            block << exp_mcallpush(exp_lvar(:x), :-, exp_lvar(:y))
+          }
+        when @s.scan(MUL)
+          exp_block { |block|
+            block << exp_lmasgn([:y, :x], [exp_pop, exp_pop])
+            block << exp_mcallpush(exp_lvar(:x), :*, exp_lvar(:y))
+          }
+        when @s.scan(DIV)
+          exp_block { |block|
+            block << exp_lmasgn([:y, :x], [exp_pop, exp_pop])
+            block << exp_mcallpush(exp_lvar(:x), :/, exp_lvar(:y))
+          }
+        when @s.scan(MOD)
+          exp_block { |block|
+            block << exp_lmasgn([:y, :x], [exp_pop, exp_pop])
+            block << exp_mcallpush(exp_lvar(:x), :%, exp_lvar(:y))
+          }
+        when @s.scan(HWRITE)
+          exp_block { |block|
+            block << exp_lmasgn([:val, :addr], [exp_pop, exp_pop])
+            block << exp_attribute_assign(exp_gvar(:heap), :[]=, exp_lvar(:addr), exp_lvar(:val))
+          }
+        when @s.scan(HREAD)
+          exp_block { |block|
+            block << exp_lasgn(:addr, exp_pop)
+            block << exp_push(exp_gvarcall(:heap, :[], exp_lvar(:addr)))
+          }
+        when @s.scan(LABEL)
+          exp_defn(string(@s[1]).intern) { process_until( lambda {|*args| @s.eos? || !!@s.match?(RETURN)} ) }
+        when @s.scan(CALL)
+          exp_fcall string(@s[1]).intern
         when @s.scan(JUMP)
-          exp_if exp_literal(true), exp_fcall(string(@s[1]).intern), process_until( lambda {|*args| @s.eos? || !!@s.match?(RETURN)} )
+          exp_if [:true], exp_fcall(string(@s[1]).intern), process_until( lambda {|*args| @s.eos? || !!@s.match?(RETURN)} )
         when @s.scan(JUMPZ)
-          exp_if exp_mcall(pop, :==, exp_literal(0)), exp_fcall(string(@s[1]).intern), process_until( lambda {|*args| @s.eos? || !!@s.match?(RETURN)} )
+          exp_if exp_mcall(exp_pop, :==, exp_literal(0)), exp_fcall(string(@s[1]).intern), process_until( lambda {|*args| @s.eos? || !!@s.match?(RETURN)} )
         when @s.scan(JUMPN)
-          exp_if exp_mcall(pop, :<, exp_literal(0)), exp_fcall(string(@s[1]).intern), process_until( lambda {|*args| @s.eos? || !!@s.match?(RETURN)} )
+          exp_if exp_mcall(exp_pop, :<, exp_literal(0)), exp_fcall(string(@s[1]).intern), process_until( lambda {|*args| @s.eos? || !!@s.match?(RETURN)} )
         when @s.scan(RETURN)  then nil
         when @s.scan(EXIT)    then exp_fcall :exit, exp_literal(0)
         when @s.scan(COUT)    then exp_gvarcall :stdout, :print, exp_mcall(exp_pop, :chr)
@@ -113,8 +134,8 @@ module Esoteric
         exp_gvarcall :stack, :pop
       end
 
-      def exp_push(value)
-        exp_gvarcall :stack, :push, value
+      def exp_push(*value)
+        exp_gvarcall :stack, :push, *value
       end
 
       def exp_mcallpush(receiver, method, *args)

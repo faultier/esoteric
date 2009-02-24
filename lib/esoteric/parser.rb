@@ -21,15 +21,14 @@ module Esoteric
     end
 
     def parse
-      while exp = process
-        if exp.first == :defn
-          @ast.unshift exp
-        else
-          @ast.push exp
+      exp_block(@ast) do |exps|
+        while exp = process
+          case exp.first
+          when :defn then exps.unshift exp
+          else            exps.push exp
+          end
         end
       end
-      @ast.unshift :block
-      @ast
     end
 
     private 
@@ -47,15 +46,15 @@ module Esoteric
     end
 
     def process_until(terminate_expr)
-      block = [:block]
-      begin
-        until terminate_expr.call(next_token)
-          block << process 
-          break if block.last.nil?
+      exp_block { |block|
+        begin
+          until terminate_expr.call(next_token)
+            block << process 
+            break if block.last.nil?
+          end
+        rescue LoopInterrapt
         end
-      rescue LoopInterrapt
-      end
-      block
+      }
     end
 
     def exp_arglist(args=[])
@@ -71,7 +70,7 @@ module Esoteric
     end
 
     def exp_defn(name, *args)
-      [:defn, name, [:scope, [:block, exp_defn_arglist(args), yield]]]
+      [:defn, name, exp_defn_arglist(args), [:scope, [:block, yield || [:nil]]]]
     end
 
     def exp_mcall(receiver, name, *args)
@@ -106,8 +105,20 @@ module Esoteric
       [scope, name, value]
     end
 
-    def exp_gasgn(name, value)
+    def exp_multi_assign(left, right)
+      [:masgn, [:array, *left], [:array, *right]]
+    end
+
+    def exp_attribute_assign(receiver, attribute, *args)
+      [:attrasgn, receiver, attribute, exp_arglist(args)]
+    end
+
+    def exp_gasgn(name, value=nil)
       exp_assign :gasgn, "$#{name}".intern, value
+    end
+
+    def exp_gmasgn(names, values)
+      exp_multi_assign names.map {|name| [:gasgn, "$#{name}".intern]}, values
     end
 
     def exp_opgasgn(name, operator, value)
@@ -116,6 +127,10 @@ module Esoteric
 
     def exp_lasgn(name, value)
       exp_assign :lasgn, name, value
+    end
+
+    def exp_lmasgn(names, values)
+      exp_multi_assign names.map {|name| [:lasgn, name]}, values
     end
 
     def exp_oplasgn(name, operator, value)
@@ -134,8 +149,21 @@ module Esoteric
       exp_condition :if, cond, tblock, fblock
     end
 
-    def exp_block(*args)
-      [:block, *args]
+    def exp_block(exps=[])
+      yield exps
+      case
+      when exps.empty?
+        nil
+      when exps.size == 1
+        exps.shift
+      else
+        exps.unshift :block
+        exps
+      end
+    end
+
+    def exp_iterator(iteration_exp, return_exp = nil, &block)
+      [:iter, iteration_exp, return_exp, exp_block([], &block)]
     end
 
     def numeric(value)

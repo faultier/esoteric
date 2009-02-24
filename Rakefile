@@ -129,8 +129,21 @@ Spec::Rake::SpecTask.new :rcov do |t|
   t.rcov_opts = RCOV_OPTS
 end
 
-desc "Run specs and rcov"
+desc "Run specs using RCov"
 task 'spec:rcov' => :rcov
 
 namespace :spec do
+  %w(brainfuck dt tetete whitespace).each do |lang|
+    desc "Run #{lang} specs"
+    Spec::Rake::SpecTask.new lang do |t| 
+      SPEC_CONTEXT.call(t)
+      t.spec_files = FileList["#{SPEC_DIR}/#{lang}/*_spec.rb"]
+    end
+  end
+
+  desc "Run all language's parser specs"
+  Spec::Rake::SpecTask.new :parser do |t|
+    SPEC_CONTEXT.call(t)
+    t.spec_files = FileList["#{SPEC_DIR}/**/*_spec.rb"]
+  end
 end

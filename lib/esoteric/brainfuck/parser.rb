@@ -59,7 +59,7 @@ module Esoteric
                     :==,
                     [:arglist, [:lit, 0]]],
                   process_until(lambda { |t| t == ']' }),
-                  nil
+                  true
                 ]
               when ']' then raise LoopInterrapt
               end
