@@ -45,7 +45,13 @@ module Esoteric
         begin
           loop do
             exp = process
-            @ast.push exp if !!exp
+            next unless !!exp
+            case 
+            when exp.respond_to?(:first) && exp.first == :defn
+              @ast.unshift exp
+            else
+              @ast.push exp
+            end
           end
         rescue ProcessInterrapt
           # do nothing

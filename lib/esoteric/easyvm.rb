@@ -17,9 +17,9 @@ module Esoteric
     def run
       # これじゃああんまりにもあんまりなので
       # 抽象構文木を実行できるVMをあとで作る
-#     puts code = @processor.process(@ast)
-#     eval code
-      eval @processor.process(@ast)
+      puts code = @processor.process(@ast)
+      eval code
+#     eval @processor.process(@ast)
     end
   end
 end

@@ -9,8 +9,12 @@ describe Esoteric::Whitespace::Parser do
     @parser_class = Esoteric::Whitespace::Parser
     @source = File.read(File.join($SPEC_DIR.parent, 'examples', 'hi.ws'))
     @remove_runtime_expression = lambda { |ast|
-      3.times { ast.shift }
-      return ast.shift
+      if ast[1].first == :defn
+        ast[1]
+      else
+        3.times { ast.shift }
+        ast.shift
+      end
     }
     @parsed_expressions = {
       "   \t\n"     => $ruby_parser.parse('$stack.push 1').to_a,
