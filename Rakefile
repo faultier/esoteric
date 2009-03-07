@@ -146,4 +146,10 @@ namespace :spec do
     SPEC_CONTEXT.call(t)
     t.spec_files = FileList["#{SPEC_DIR}/**/*_spec.rb"]
   end
+
+  desc 'Run compiler specs'
+  Spec::Rake::SpecTask.new :compiler do |t|
+    SPEC_CONTEXT.call(t)
+    t.spec_files = ["#{SPEC_DIR}/compiler_spec.rb"]
+  end
 end
