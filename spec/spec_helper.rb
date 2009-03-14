@@ -44,11 +44,15 @@ describe 'parser', :shared => true do
     lambda { @parser_class.parse }.should raise_error(ArgumentError)
   end
 
-  it "should parse source to Ruby's AST as a array" do
-    ast = @parser_class.parse(@source)
-    ast.should be_kind_of(Array)
-    # 当面の間、Parserの出力するASTが、
-    # Ruby2Rubyが処理できる形のASTと互換性を保つ方針で
-    lambda { Ruby2Ruby.new.process Sexp.from_array(ast) }.should_not raise_error
+  it "should parse source to LLVM AST as a array" do
+    pending "not implemented yet" unless @parser_class == Esoteric::DT::Parser
+    ast = Sexp.from_array(@parser_class.parse(@source))
+    lambda {
+      compiler = Esoteric::Compiler.new
+      compiler.init_llvm_module_with_name('esoteric')
+      m = compiler.process(ast)
+      m.write_bitcode("#{$SPEC_DIR}/esoteric.bc")
+      system "rm #{$SPEC_DIR}/esoteric.bc"
+    }.should_not raise_error
   end
 end

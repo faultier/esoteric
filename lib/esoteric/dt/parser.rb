@@ -41,27 +41,27 @@ module Esoteric
         super
         @s = StringScanner.new(@src)
         @ast = [
-          [:gasgn, :$stack, [:array]],
-          [:gasgn, :$heap, [:hash]],
+          :module,
+          [:declare, [:type, :void], :push, [:args, [:type, :int]]],
+          [:declare, [:type, :int], :pop, [:args, nil]],
         ]
       end
 
       def parse
-        begin
-          loop do
-            exp = process
-            next unless !!exp
-            case 
-            when exp.respond_to?(:first) && exp.first == :defn
-              @ast.unshift exp
-            else
-              @ast.push exp
-            end
-          end
-        rescue ProcessInterrapt
-          # do nothing
-        end
-        @ast.unshift :block
+#       begin
+#         loop do
+#           exp = process
+#           next unless !!exp
+#           case 
+#           when exp.respond_to?(:first) && exp.first == :defn
+#             @ast.unshift exp
+#           else
+#             @ast.push exp
+#           end
+#         end
+#       rescue ProcessInterrapt
+#         # do nothing
+#       end
 #       require 'pp'; pp @ast
         @ast
       end

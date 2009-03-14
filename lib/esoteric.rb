@@ -1,6 +1,7 @@
 # coding: utf-8
 
 require 'esoteric/parser'
+require 'esoteric/compiler'
 require 'esoteric/vm'
 
 module Esoteric

@@ -10,10 +10,16 @@ module Esoteric
     Long      = LLVM::Type::Int64Ty
     Char      = LLVM::Type::Int8Ty
     PChar     = LLVM::Type.pointer(Char)
+
+    def self.determin(type)
+      eval type.to_s.split('_').map{|w| w.capitalize}.join('')
+    end
   end
 
   class Compiler < SexpProcessor
     VERSION = '0.0.1'
+
+    attr_accessor :module
 
     def self.compile(sexpr, module_name = 'esoteric', file_name = nil)
       file_name ||= "#{module_nane}.o"
@@ -25,94 +31,124 @@ module Esoteric
 
     def initialize
       super
-      self.auto_shift_type = true
-      self.strict = false
+      self.auto_shift_type  = true
+      self.strict           = false
+      @scope        = nil
+      @builder      = nil
+      @named_values = Hash.new({})
+      @functions    = {}
     end
 
-    def init_llvm_module(module_name = 'esoteric')
-      @module= LLVM::Module.new(module_name)
+    def init_llvm_module_with_name(name)
+      @module = LLVM::Module.new(name)
       LLVM::ExecutionEngine.get(@module)
-
-      @printf  = @module.external_function(
-        'printf',
-        LLVM::Type.function(Type::Int, [Type::PChar], true)
-      )
-      @sprintf = @module.external_function(
-        'sprintf',
-        LLVM::Type.function(Type::PChar, [Type::PChar, Type::PChar], true)
-      )
     end
 
     def process(sexp)
-      p sexp
+#     p sexp
       res = super
+#     p res
       return context.empty? ? @module : res
     end
 
-    def process_main(exp)
-      context.push @module.get_or_insert_function(
-        'main',
-        LLVM::Type.function(Type::Int, [Type::Int, LLVM::Type.pointer(Type::PChar)])
-      )
-      process(exp.shift).shift.return(0.llvm)
-      Sexp.new(context.pop)
+    def process_module(exp)
+      process(exp.shift) until exp.empty?
+      Sexp.new(@module)
     end
 
-=begin
+    def process_declare(exp)
+      rtype = process(exp.shift).first
+      fname = exp.shift
+      ftype = LLVM::Type.function(rtype, process(exp.shift).to_a)
+      @module.external_function(fname.to_s, ftype)
+      Sexp.new(nil)
+    end
+
+    def process_define(exp)
+      rtype = process(exp.shift).first
+      fname = @scope = exp.shift
+      ftype = LLVM::Type.function(rtype, process(exp.shift).to_a)
+      @functions[fname] = @module.get_or_insert_function(fname.to_s, ftype)
+      process(exp.shift) until exp.empty?
+      @current_function = nil
+      Sexp.new(nil)
+    end
+
+    def process_block(exp)
+      @builder = @functions[@scope].create_block.builder
+      process(exp.shift) until exp.empty?
+      @builder = nil
+      Sexp.new(nil)
+    end
+
+    def process_ret(exp)
+      @builder.return(process(exp.shift).first)
+      Sexp.new(nil)
+    end
+
     def process_type(exp)
       type = exp.shift
       case type
-      when :int
-        Sexp.new(Type::Int)
-      when :char
-        Sexp.new(Type::Char)
+      when Symbol
+        Sexp.new(Type.determin(type))
+      when Array, Sexp
+        process(type)
+      else
+        Sexp.new(nil)
       end
     end
 
     def process_ptr(exp)
-      type = process(exp.shift)
-      Sexp.new(LLVM::Type.pointer(type.shift))
-    end
-=end
-
-    def process_lit(exp)
-      case lit = exp.shift
-      when Integer, Bignum
-        Sexp.new(lit.llvm)
-      end
+      type = process(exp.shift).first
+      Sexp.new(LLVM::Type.pointer(type))
     end
 
-    def process_defn(exp)
-      name  = exp.shift
-      ret   = process(exp.shift).first
-      args  = process(exp.shift).to_a
-
-      ftype = LLVM::Type.function(ret, *args)
-      func  = @module.get_or_insert_function(name.to_s, ftype)
-
-      context.unshift func
-      block = process(exp.shift)
-      context.shift
-
-      Sexp.new(nil)
+    def process_ptype(exp)
+      process(Sexp.from_array([:ptr, [:type, exp.shift]]))
     end
 
     def process_args(exp)
-      types = []
-      while e = exp.shift
-        types << process(e)
-      end
-      Sexp.new(types.map {|e| e.shift })
+      Sexp.new(*list_exp(exp))
     end
 
-    def process_block(exp)
-      func = context.find {|c| c.is_a?(LLVM::Function)}
-      context.unshift func.create_block.builder
-      until exp.empty?
-        bexp = exp.shift
-        process(bexp) if !!bexp
+    def process_arg(exp)
+      Sexp.new(@functions[@scope].arguments[exp.shift])
+    end
+
+    def process_lit(exp)
+      case lit = exp.shift
+      when Integer
+        Sexp.new(lit.llvm)
+      when String
+        lit = @builder.create_global_string_ptr(lit)
+        Sexp.new(lit)
       end
-      Sexp.new(context.shift)
+    end
+
+    def process_lasgn(exp)
+      name  = exp.shift
+      value = process(exp.shift).first
+      @named_values[@scope][name] = value
+      Sexp.new(nil)
+    end
+
+    def process_lvar(exp)
+      Sexp.new(@named_values[@scope][exp.shift])
+    end
+
+    def process_add(exp)
+      rhs1, rhs2 = process(exp.shift).first, process(exp.shift).first
+      Sexp.new(@builder.add(rhs1, rhs2))
+    end
+
+    private
+    def list_exp(exp, ignore_nil = false)
+      list = []
+      while value = exp.shift
+        list << process(value).first
+      end
+      list.compact! if ignore_nil
+      return list
     end
   end
 end
