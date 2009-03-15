@@ -120,6 +120,13 @@ SPEC_CONTEXT = lambda {|t|
     t.libs = %w(lib)
 }
 
+desc "Build runtime libraries"
+task :compile => %w(ext/dt_runtime.bc)
+
+rule '.bc' => '.ll' do |t|
+  sh "llvm-as -o #{t} #{t.source}"
+end
+
 desc "Run specs"
 Spec::Rake::SpecTask.new { |t| SPEC_CONTEXT.call(t) }
 

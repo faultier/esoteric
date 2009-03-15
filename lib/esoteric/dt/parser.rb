@@ -42,27 +42,31 @@ module Esoteric
         @s = StringScanner.new(@src)
         @ast = [
           :module,
-          [:declare, [:type, :void], :push, [:args, [:type, :int]]],
-          [:declare, [:type, :int], :pop, [:args, nil]],
+          [:declare, [:type, :void], :'dt.stack_push', [:args, [:type, :int]]],
+          [:declare, [:type, :int], :'dt.stack_pop', [:args, nil]],
+          [:define, [:type, :int], :main, [:args, [:type, :int], [:ptype, :p_char]]],
         ]
+        @main_block = [:block, :entry]
       end
 
       def parse
-#       begin
-#         loop do
-#           exp = process
-#           next unless !!exp
-#           case 
-#           when exp.respond_to?(:first) && exp.first == :defn
-#             @ast.unshift exp
-#           else
-#             @ast.push exp
-#           end
-#         end
-#       rescue ProcessInterrapt
-#         # do nothing
-#       end
-#       require 'pp'; pp @ast
+        begin
+          loop do
+            exp = process
+            next unless !!exp
+            case 
+            when exp.respond_to?(:first) && exp.first == :defn
+              @main_block.unshift exp
+            else
+              @main_block.push exp
+            end
+          end
+        rescue ProcessInterrapt
+          # do nothing
+        end
+        @main_block.push [:ret, [:lit, 0]]
+        @ast.last.push @main_block
+        require 'pp'; pp @ast
         @ast
       end
 
@@ -145,11 +149,11 @@ module Esoteric
       end
 
       def exp_pop
-        exp_gvarcall :stack, :pop
+        [:call, :'dt.stack_pop', [:args, nil]]
       end
 
       def exp_push(value)
-        exp_gvarcall :stack, :push, value
+        [:call, :'dt.stack_push', [:args, value]]
       end
 
       def exp_mcallpush(receiver, method, *args)

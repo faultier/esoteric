@@ -44,7 +44,7 @@ describe 'parser', :shared => true do
     lambda { @parser_class.parse }.should raise_error(ArgumentError)
   end
 
-  it "should parse source to LLVM AST as a array" do
+  it "should translate source to LLVM AST as a array" do
     pending "not implemented yet" unless @parser_class == Esoteric::DT::Parser
     ast = Sexp.from_array(@parser_class.parse(@source))
     lambda {

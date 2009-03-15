@@ -11,7 +11,7 @@ module Esoteric
     Char      = LLVM::Type::Int8Ty
     PChar     = LLVM::Type.pointer(Char)
 
-    def self.determin(type)
+    def self.determine(type)
       eval type.to_s.split('_').map{|w| w.capitalize}.join('')
     end
   end
@@ -37,6 +37,7 @@ module Esoteric
       @builder      = nil
       @named_values = Hash.new({})
       @functions    = {}
+      @blocks       = Hash.new({})
     end
 
     def init_llvm_module_with_name(name)
@@ -70,12 +71,31 @@ module Esoteric
       ftype = LLVM::Type.function(rtype, process(exp.shift).to_a)
       @functions[fname] = @module.get_or_insert_function(fname.to_s, ftype)
       process(exp.shift) until exp.empty?
-      @current_function = nil
+      Sexp.new(nil)
+    end
+
+    def process_call(exp)
+      func  = @module.get_function(exp.shift.to_s)
+      args  = process(exp.shift).to_a
+      @builder.call(func, *args)
+      Sexp.new(nil)
+    end
+
+    def process_jump(exp)
+      @builder.br get_or_create_block(exp.shift)
+      Sexp.new(nil)
+    end
+
+    def process_if(exp)
+      cond = process(exp.shift).first
+      tbr  = get_or_create_block(exp.shift)
+      fbr  = get_or_create_block(exp.shift)
+      @builder.cond_br cond, tbr, fbr
       Sexp.new(nil)
     end
 
     def process_block(exp)
-      @builder = @functions[@scope].create_block.builder
+      @builder = get_or_create_block(exp.shift).builder
       process(exp.shift) until exp.empty?
       @builder = nil
       Sexp.new(nil)
@@ -90,7 +110,7 @@ module Esoteric
       type = exp.shift
       case type
       when Symbol
-        Sexp.new(Type.determin(type))
+        Sexp.new(Type.determine(type))
       when Array, Sexp
         process(type)
       else
@@ -122,6 +142,8 @@ module Esoteric
       when String
         lit = @builder.create_global_string_ptr(lit)
         Sexp.new(lit)
+      when TrueClass, FalseClass
+        Sexp.new((lit ? 1 : 0).llvm(LLVM::Type::Int1Ty))
       end
     end
 
@@ -136,9 +158,17 @@ module Esoteric
       Sexp.new(@named_values[@scope][exp.shift])
     end
 
-    def process_add(exp)
+    def process_op(exp)
+      op  = exp.shift
+      rhs = []
+      rhs << process(exp.shift).first until exp.empty?
+      Sexp.new @builder.__send__(op, *rhs)
+    end
+
+    def process_binop(exp)
+      op = exp.shift
       rhs1, rhs2 = process(exp.shift).first, process(exp.shift).first
-      Sexp.new(@builder.add(rhs1, rhs2))
+      Sexp.new @builder.__send__(op, rhs1, rhs2)
     end
 
     private
@@ -149,6 +179,15 @@ module Esoteric
       end
       list.compact! if ignore_nil
       return list
+    end
+
+    def get_or_create_block(name)
+      unless block = @blocks[@scope][name]
+        block = @functions[@scope].create_block
+        block.name = name.to_s
+        @blocks[@scope][name] = block
+      end
+      block
     end
   end
 end
