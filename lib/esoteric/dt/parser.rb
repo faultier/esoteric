@@ -15,57 +15,50 @@ module Esoteric
       PUSH    = /どど#{NVAL}/
       DUP     = /ど…ど/
       COPY    = /ど童貞ちゃうわっ！ど#{NVAL}/
-      SWAP    = /ど…童貞ちゃうわっ！/
+      SWAP    = /ど…童貞ちゃうわっ！/ # not yet
       DISCARD = /ど……/
-      SLIDE   = /ど童貞ちゃうわっ！…#{NVAL}/
-      ADD     = /童貞ちゃうわっ！どどど/
-      SUB     = /童貞ちゃうわっ！どど童貞ちゃうわっ！/
-      MUL     = /童貞ちゃうわっ！どど…/
-      DIV     = /童貞ちゃうわっ！ど童貞ちゃうわっ！ど/
-      MOD     = /童貞ちゃうわっ！ど童貞ちゃうわっ！童貞ちゃうわっ！/
-      HWRITE  = /童貞ちゃうわっ！童貞ちゃうわっ！ど/
-      HREAD   = /童貞ちゃうわっ！童貞ちゃうわっ！童貞ちゃうわっ！/
+      SLIDE   = /ど童貞ちゃうわっ！…#{NVAL}/ # not yet
+      ADD     = /童貞ちゃうわっ！どどど/ # not yet
+      SUB     = /童貞ちゃうわっ！どど童貞ちゃうわっ！/ # not yet
+      MUL     = /童貞ちゃうわっ！どど…/ # not yet
+      DIV     = /童貞ちゃうわっ！ど童貞ちゃうわっ！ど/ # not yet
+      MOD     = /童貞ちゃうわっ！ど童貞ちゃうわっ！童貞ちゃうわっ！/ # not yet
+      HWRITE  = /童貞ちゃうわっ！童貞ちゃうわっ！ど/ # not yet
+      HREAD   = /童貞ちゃうわっ！童貞ちゃうわっ！童貞ちゃうわっ！/ # not yet
       LABEL   = /…どど#{LVAL}/
-      CALL    = /…ど童貞ちゃうわっ！#{LVAL}/
-      JUMP    = /…ど…#{LVAL}/
-      JUMPZ   = /…童貞ちゃうわっ！ど#{LVAL}/
-      JUMPN   = /…童貞ちゃうわっ！童貞ちゃうわっ！#{LVAL}/
-      RETURN  = /…童貞ちゃうわっ！…/
-      EXIT    = /………/
-      COUT    = /童貞ちゃうわっ！…どど/
-      NOUT    = /童貞ちゃうわっ！…ど童貞ちゃうわっ！/
-      CIN     = /童貞ちゃうわっ！…童貞ちゃうわっ！ど/
-      NIN     = /童貞ちゃうわっ！…童貞ちゃうわっ！童貞ちゃうわっ！/
+      CALL    = /…ど童貞ちゃうわっ！#{LVAL}/ # not yet
+      JUMP    = /…ど…#{LVAL}/ # not completed
+      JUMPZ   = /…童貞ちゃうわっ！ど#{LVAL}/ # not completed
+      JUMPN   = /…童貞ちゃうわっ！童貞ちゃうわっ！#{LVAL}/ # not completed
+      RETURN  = /…童貞ちゃうわっ！…/ # not yet
+      EXIT    = /………/ # not yet
+      COUT    = /童貞ちゃうわっ！…どど/ # not yet
+      NOUT    = /童貞ちゃうわっ！…ど童貞ちゃうわっ！/ # not yet
+      CIN     = /童貞ちゃうわっ！…童貞ちゃうわっ！ど/ # not yet
+      NIN     = /童貞ちゃうわっ！…童貞ちゃうわっ！童貞ちゃうわっ！/ # not yet
 
       def initialize(src, logger=nil)
         super
-        @s = StringScanner.new(@src)
-        @ast = [
-          :module,
-          [:declare, [:type, :void], :'dt.stack_push', [:args, [:type, :int]]],
-          [:declare, [:type, :int], :'dt.stack_pop', [:args, nil]],
-          [:define, [:type, :int], :main, [:args, [:type, :int], [:ptype, :p_char]]],
-        ]
-        @main_block = [:block, :entry]
+        @s        = StringScanner.new(@src)
+        @ast      = []
       end
 
       def parse
+        @ast.push [:block, :entry] unless @src =~ /^…どど/
         begin
           loop do
             exp = process
             next unless !!exp
             case 
-            when exp.respond_to?(:first) && exp.first == :defn
-              @main_block.unshift exp
+            when exp.respond_to?(:first) && exp.first == :block
+              @ast.push exp
             else
-              @main_block.push exp
+              @ast.last.push exp
             end
           end
         rescue ProcessInterrapt
           # do nothing
         end
-        @main_block.push [:ret, [:lit, 0]]
-        @ast.last.push @main_block
         require 'pp'; pp @ast
         @ast
       end
@@ -82,11 +75,11 @@ module Esoteric
       def process
         case
         when @s.eos?          then raise ProcessInterrapt
-        when @s.scan(PUSH)    then exp_push exp_literal(numeric(@s[1]))
-        when @s.scan(DUP)     then exp_push exp_gvarcall(:stack, :last)
-        when @s.scan(COPY)    then exp_push exp_gvarcall(:stack, :[], exp_literal(-(numeric(@s[1]))-1))
+        when @s.scan(PUSH)    then [:call, :'dt.stack_push', [:args, [:lit, numeric(@s[1])]]]
+        when @s.scan(DUP)     then [:call, :'dt.stack_dup', [:args, nil]]
+        when @s.scan(COPY)    then [:call, :'dt.stack_copy', [:args, [:lit, numeric(@s[1])]]]
         when @s.scan(SWAP)    then exp_push exp_pop, exp_pop
-        when @s.scan(DISCARD) then exp_pop
+        when @s.scan(DISCARD) then [:call, :'dt.stack_pop', [:args, nil]]
         when @s.scan(SLIDE)
           exp_block { |block|
             block << exp_lasgn(:top, exp_gvarcall(:stack, :pop))
@@ -128,16 +121,40 @@ module Esoteric
             block << exp_lasgn(:addr, exp_pop)
             block << exp_push(exp_gvarcall(:heap, :[], exp_lvar(:addr)))
           }
-        when @s.scan(LABEL)
-          exp_defn(string(@s[1]).intern) { process_until( lambda {|*args| @s.eos? || !!@s.match?(RETURN)} ) }
+        when @s.scan(LABEL)   then [:block, string(@s[1]).intern]
         when @s.scan(CALL)
           exp_fcall string(@s[1]).intern
-        when @s.scan(JUMP)
-          exp_if [:true], exp_fcall(string(@s[1]).intern), process_until( lambda {|*args| @s.eos? || !!@s.match?(RETURN)} )
+        when @s.scan(JUMP)    then [:jump, string(@s[1]).intern]
         when @s.scan(JUMPZ)
-          exp_if exp_mcall(exp_pop, :==, exp_literal(0)), exp_fcall(string(@s[1]).intern), process_until( lambda {|*args| @s.eos? || !!@s.match?(RETURN)} )
+          i, j, k, l = 0, 0, 0, 0
+          i += 1 while @ast.any? { |b| b[1] == "cb#{i}".intern }
+          j += 1 while @ast.any? { |b| !!b[2] && b[2].any? { |e| e[0] == :lasgn && e[1] == "tv#{j}".intern } }
+          k += 1 while @ast.any? { |b| !!b[2] && b[2].any? { |e| e[0] == :lasgn && e[1] == "cv#{k}".intern } }
+          l += 1 while @ast.any? { |b| b[1] == "bb#{l}".intern }
+          cb, tv, cv, rb = "cb#{i}".intern, "tv#{j}".intern, "cv#{k}".intern, "bb#{l}".intern
+          @ast.last.push [:jump, cb]
+          @ast << [:block,
+            cb,
+            [:lasgn, tv, [:call, :'dt.stack_pop', [:args, nil]]],
+            [:lasgn, cv, [:op, :icmp_eq, [:lvar, tv], [:lit, 0]]],
+            [:if, [:lvar, cv], string(@s[1]).intern, rb]
+          ]
+          [:block, rb]
         when @s.scan(JUMPN)
-          exp_if exp_mcall(exp_pop, :<, exp_literal(0)), exp_fcall(string(@s[1]).intern), process_until( lambda {|*args| @s.eos? || !!@s.match?(RETURN)} )
+          i, j, k, l = 0, 0, 0, 0
+          i += 1 while @ast.any? { |b| b[1] == "cb#{i}".intern }
+          j += 1 while @ast.any? { |b| !!b[2] && b[2].any? { |e| e[0] == :lasgn && e[1] == "tv#{j}".intern } }
+          k += 1 while @ast.any? { |b| !!b[2] && b[2].any? { |e| e[0] == :lasgn && e[1] == "cv#{k}".intern } }
+          l += 1 while @ast.any? { |b| b[1] == "bb#{l}".intern }
+          cb, tv, cv, rb = "cb#{i}".intern, "tv#{j}".intern, "cv#{k}".intern, "bb#{l}".intern
+          @ast.last.push [:jump, cb]
+          @ast << [:block,
+            cb,
+            [:lasgn, tv, [:call, :'dt.stack_pop', [:args, nil]]],
+            [:lasgn, cv, [:op, :icmp_slt, [:lvar, tv], [:lit, 0]]],
+            [:if, [:lvar, cv], string(@s[1]).intern, rb]
+          ]
+          [:block, rb]
         when @s.scan(RETURN)  then nil
         when @s.scan(EXIT)    then exp_fcall :exit, exp_literal(0)
         when @s.scan(COUT)    then exp_gvarcall :stdout, :print, exp_mcall(exp_pop, :chr)

@@ -20,7 +20,7 @@ BIN_FILES         = %w(bf dt esoc tetete ws)
 
 VERS              = Esoteric::VERSION
 REV = File.read(".svn/entries")[/committed-rev="(d+)"/, 1] rescue nil
-CLEAN.include ['**/.*.sw?', '*.gem', '.config']
+CLEAN.include ['**/.*.sw?', '*.gem', '.config', 'ext/*.bc']
 RDOC_OPTS = [
 	'--title', "#{NAME} documentation",
 	"--charset", "utf-8",
@@ -124,7 +124,7 @@ desc "Build runtime libraries"
 task :compile => %w(ext/dt_runtime.bc)
 
 rule '.bc' => '.ll' do |t|
-  sh "llvm-as -o #{t} #{t.source}"
+  sh "llvm-as -f -o #{t} #{t.source}"
 end
 
 desc "Run specs"

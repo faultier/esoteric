@@ -46,7 +46,7 @@ describe 'parser', :shared => true do
 
   it "should translate source to LLVM AST as a array" do
     pending "not implemented yet" unless @parser_class == Esoteric::DT::Parser
-    ast = Sexp.from_array(@parser_class.parse(@source))
+    ast = @preprocessor_class.process(@parser_class.parse(@source))
     lambda {
       compiler = Esoteric::Compiler.new
       compiler.init_llvm_module_with_name('esoteric')

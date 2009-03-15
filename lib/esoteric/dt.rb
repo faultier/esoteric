@@ -2,6 +2,7 @@
 
 require 'esoteric'
 require 'esoteric/dt/parser'
+require 'esoteric/dt/pre_processor'
 
 module Esoteric
   module DT
