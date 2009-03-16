@@ -26,10 +26,10 @@ module Esoteric
       HWRITE  = /童貞ちゃうわっ！童貞ちゃうわっ！ど/ # not yet
       HREAD   = /童貞ちゃうわっ！童貞ちゃうわっ！童貞ちゃうわっ！/ # not yet
       LABEL   = /…どど#{LVAL}/
-      CALL    = /…ど童貞ちゃうわっ！#{LVAL}/ # not yet
-      JUMP    = /…ど…#{LVAL}/ # not completed
-      JUMPZ   = /…童貞ちゃうわっ！ど#{LVAL}/ # not completed
-      JUMPN   = /…童貞ちゃうわっ！童貞ちゃうわっ！#{LVAL}/ # not completed
+      CALL    = /…ど童貞ちゃうわっ！#{LVAL}/
+      JUMP    = /…ど…#{LVAL}/
+      JUMPZ   = /…童貞ちゃうわっ！ど#{LVAL}/
+      JUMPN   = /…童貞ちゃうわっ！童貞ちゃうわっ！#{LVAL}/
       RETURN  = /…童貞ちゃうわっ！…/ # not yet
       EXIT    = /………/ # not yet
       COUT    = /童貞ちゃうわっ！…どど/ # not yet
@@ -122,8 +122,7 @@ module Esoteric
             block << exp_push(exp_gvarcall(:heap, :[], exp_lvar(:addr)))
           }
         when @s.scan(LABEL)   then [:block, string(@s[1]).intern]
-        when @s.scan(CALL)
-          exp_fcall string(@s[1]).intern
+        when @s.scan(CALL)    then [:call, string(@s[1]).intern, [:args, nil]]
         when @s.scan(JUMP)    then [:jump, string(@s[1]).intern]
         when @s.scan(JUMPZ)
           i, j, k, l = 0, 0, 0, 0

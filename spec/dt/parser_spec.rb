@@ -8,9 +8,11 @@ DT_EXAMPLES = {
   :copy     => 'ど童貞ちゃうわっ！どど童貞ちゃうわっ！ど…', # copy 2
   :discard  => 'ど……',                                      # discard
   :label    => '…どど童貞ちゃうわっ！…',                    # label t
+  :call     => '…ど童貞ちゃうわっ！童貞ちゃうわっ！…',      # call t
   :jump     => '…ど…童貞ちゃうわっ！…',                     # jump t
   :jumpz    => '…童貞ちゃうわっ！ど童貞ちゃうわっ！…',      # jumpz t
   :jumpn    => '…童貞ちゃうわっ！童貞ちゃうわっ！童貞ちゃうわっ！…', # jumpn t
+  :return   => '…ど童貞ちゃうわっ！童貞ちゃうわっ！……どど童貞ちゃうわっ！……童貞ちゃうわっ！…', # call t, label t, return t
 }
 
 describe Esoteric::DT::Parser do
@@ -24,6 +26,7 @@ describe Esoteric::DT::Parser do
       DT_EXAMPLES[:copy]    => [[:block, :entry, [:call, :'dt.stack_copy', [:args, [:lit, 2]]]]],
       DT_EXAMPLES[:discard] => [[:block, :entry, [:call, :'dt.stack_pop',  [:args, nil]]]],
       DT_EXAMPLES[:label]   => [[:block, :t]],
+      DT_EXAMPLES[:call]    => [[:block, :entry, [:call, :t, [:args, nil]]]],
       DT_EXAMPLES[:jump]    => [[:block, :entry, [:jump, :t]]],
       DT_EXAMPLES[:jumpz]   => [
                                   [:block, :entry, [:jump, :cb0]],
@@ -40,6 +43,10 @@ describe Esoteric::DT::Parser do
                                     [:lasgn, :cv0, [:op, :icmp_slt, [:lvar, :tv0], [:lit, 0]]],
                                     [:if, [:lvar, :cv0], :t, :bb0]],
                                   [:block, :bb0]
+                               ],
+      DT_EXAMPLES[:return]  => [
+                                  [:define, [:type, :int], :main, [:args, [:type, :int], [:ptype, :p_char]], [:block, :entry, [:call, :t, [:args, nil]]]],
+                                  [:define, [:type, :void], :t, [:args, nil], [:block, [:ret, :void]]],
                                ],
     }
   end
