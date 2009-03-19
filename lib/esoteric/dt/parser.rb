@@ -178,7 +178,10 @@ module Esoteric
             [:if, [:lvar, cv], string(@s[1]).intern, rb]
           ]
           [:block, rb]
-#       when @s.scan(RETURN)  then nil
+        when @s.scan(RETURN)
+          p current_function.reject
+          p current_block
+          nil
 #       when @s.scan(EXIT)    then exp_fcall :exit, exp_literal(0)
 #       when @s.scan(COUT)    then exp_gvarcall :stdout, :print, exp_mcall(exp_pop, :chr)
 #       when @s.scan(NOUT)    then exp_gvarcall :stdout, :print, exp_mcall(exp_pop, :to_i)

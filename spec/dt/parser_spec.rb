@@ -12,7 +12,7 @@ DT_EXAMPLES = {
   :jump     => '…ど…童貞ちゃうわっ！…',                     # jump t
   :jumpz    => '…童貞ちゃうわっ！ど童貞ちゃうわっ！…',      # jumpz t
   :jumpn    => '…童貞ちゃうわっ！童貞ちゃうわっ！童貞ちゃうわっ！…', # jumpn t
-# :return   => '…ど童貞ちゃうわっ！童貞ちゃうわっ！……どど童貞ちゃうわっ！……童貞ちゃうわっ！…', # call t, label t, return t
+  :return   => '…ど童貞ちゃうわっ！童貞ちゃうわっ！……どど童貞ちゃうわっ！……童貞ちゃうわっ！…', # call t, label t, return
 }
 
 DT_MAIN_EXP     = [:define, [:type, :int], :main, [:args, [:type, :int], [:ptype, :p_char]]]
@@ -61,6 +61,10 @@ describe Esoteric::DT::Parser do
                                     [:block, :bb0],
                                     DT_MAIN_RET_EXP
                                   ]
+                               ],
+      DT_EXAMPLES[:return]  => [:module,
+                                  DT_MAIN_EXP.dup + [[:block, :entry, [:call, :t]], DT_MAIN_EXP],
+                                  [:define, [:type, :void], :t, [:args, nil], [:block, :entry, [:ret, :void]]]
                                ],
     }
   end
