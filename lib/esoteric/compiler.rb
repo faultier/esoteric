@@ -137,6 +137,8 @@ module Esoteric
 
     def process_lit(exp)
       case lit = exp.shift
+      when :void
+        0.llvm
       when Integer
         Sexp.new(lit.llvm)
       when String

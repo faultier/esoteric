@@ -63,8 +63,8 @@ describe Esoteric::DT::Parser do
                                   ]
                                ],
       DT_EXAMPLES[:return]  => [:module,
-                                  DT_MAIN_EXP.dup + [[:block, :entry, [:call, :t]], DT_MAIN_EXP],
-                                  [:define, [:type, :void], :t, [:args, nil], [:block, :entry, [:ret, :void]]]
+                                  DT_MAIN_EXP.dup + [[:block, :entry, [:call, :t, [:args, nil]]], DT_MAIN_RET_EXP],
+                                  [:define, [:type, :void], :t, [:args, nil], [:block, :entry, [:ret, [:lit, :void]]]]
                                ],
     }
   end

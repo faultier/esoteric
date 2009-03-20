@@ -30,7 +30,7 @@ module Esoteric
       JUMP    = /…ど…#{LVAL}/
       JUMPZ   = /…童貞ちゃうわっ！ど#{LVAL}/
       JUMPN   = /…童貞ちゃうわっ！童貞ちゃうわっ！#{LVAL}/
-      RETURN  = /…童貞ちゃうわっ！…/ # not yet
+      RETURN  = /…童貞ちゃうわっ！…/
       EXIT    = /………/ # not yet
       COUT    = /童貞ちゃうわっ！…どど/ # not yet
       NOUT    = /童貞ちゃうわっ！…ど童貞ちゃうわっ！/ # not yet
@@ -51,6 +51,7 @@ module Esoteric
             case 
             when exp.respond_to?(:first) && (exp.first == :define || exp.first == :declare)
               @ast.push exp
+              @current_function = exp if exp.first == :define
             when exp.respond_to?(:first) && exp.first == :block
               current_function.push exp
             else
@@ -179,9 +180,12 @@ module Esoteric
           ]
           [:block, rb]
         when @s.scan(RETURN)
-          p current_function.reject
-          p current_block
-          nil
+          cb, label = current_block, current_block[1]
+          current_function.delete_if {|b| b == cb }
+          cb[1] = :entry
+          cb.push [:ret, [:lit, :void]]
+          func = [:define, [:type, :void], label, [:args, nil], cb]
+          func
 #       when @s.scan(EXIT)    then exp_fcall :exit, exp_literal(0)
 #       when @s.scan(COUT)    then exp_gvarcall :stdout, :print, exp_mcall(exp_pop, :chr)
 #       when @s.scan(NOUT)    then exp_gvarcall :stdout, :print, exp_mcall(exp_pop, :to_i)
