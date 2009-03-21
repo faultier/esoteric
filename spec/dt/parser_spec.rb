@@ -7,6 +7,10 @@ DT_EXAMPLES = {
   :dup      => 'ど…ど',                                     # dup 
   :copy     => 'ど童貞ちゃうわっ！どど童貞ちゃうわっ！ど…', # copy 2
   :discard  => 'ど……',                                      # discard
+  :add      => '童貞ちゃうわっ！どどど',                    # add
+  :sub      => '童貞ちゃうわっ！どど童貞ちゃうわっ！',      # sub
+  :mul      => '童貞ちゃうわっ！どど…',                    # mul
+  :div      => '童貞ちゃうわっ！ど童貞ちゃうわっ！ど',      # sub
   :label    => 'ど…ど…どど童貞ちゃうわっ！…ど…ど',          # dup, label t, dup
   :call     => '…ど童貞ちゃうわっ！童貞ちゃうわっ！…',      # call t
   :jump     => '…ど…童貞ちゃうわっ！…',                     # jump t
@@ -28,6 +32,54 @@ describe Esoteric::DT::Parser do
       DT_EXAMPLES[:dup]     => [:module, DT_MAIN_EXP.dup + [[:block, :entry, [:call, :'dt.stack_dup',  [:args, nil]]], DT_MAIN_RET_EXP]],
       DT_EXAMPLES[:copy]    => [:module, DT_MAIN_EXP.dup + [[:block, :entry, [:call, :'dt.stack_copy', [:args, [:lit, 2]]]], DT_MAIN_RET_EXP]],
       DT_EXAMPLES[:discard] => [:module, DT_MAIN_EXP.dup + [[:block, :entry, [:call, :'dt.stack_pop',  [:args, nil]]], DT_MAIN_RET_EXP]],
+      DT_EXAMPLES[:add]     => [:module,
+                                 DT_MAIN_EXP.dup +
+                                 [
+                                   [:block,
+                                     :entry,
+                                     [:lasgn, :y, [:call, :'dt.stack_pop', [:args, nil]]],
+                                     [:lasgn, :x, [:call, :'dt.stack_pop', [:args, nil]]],
+                                     [:lasgn, :res, [:binop, :add, [:lvar, :x], [:lvar, :y]]],
+                                     [:call, :'dt.stack_push', [:args, [:lvar, :res]]]]
+                                   DT_MAIN_RET_EXP
+                                 ]
+                               ],
+      DT_EXAMPLES[:sub]     => [:module,
+                                 DT_MAIN_EXP.dup +
+                                 [
+                                   [:block,
+                                     :entry,
+                                     [:lasgn, :y, [:call, :'dt.stack_pop', [:args, nil]]],
+                                     [:lasgn, :x, [:call, :'dt.stack_pop', [:args, nil]]],
+                                     [:lasgn, :res, [:binop, :sub, [:lvar, :x], [:lvar, :y]]],
+                                     [:call, :'dt.stack_push', [:args, [:lvar, :res]]]]
+                                   DT_MAIN_RET_EXP
+                                 ]
+                               ],
+      DT_EXAMPLES[:mul]     => [:module,
+                                 DT_MAIN_EXP.dup +
+                                 [
+                                   [:block,
+                                     :entry,
+                                     [:lasgn, :y, [:call, :'dt.stack_pop', [:args, nil]]],
+                                     [:lasgn, :x, [:call, :'dt.stack_pop', [:args, nil]]],
+                                     [:lasgn, :res, [:binop, :mul, [:lvar, :x], [:lvar, :y]]],
+                                     [:call, :'dt.stack_push', [:args, [:lvar, :res]]]]
+                                   DT_MAIN_RET_EXP
+                                 ]
+                               ],
+      DT_EXAMPLES[:div]     => [:module,
+                                 DT_MAIN_EXP.dup +
+                                 [
+                                   [:block,
+                                     :entry,
+                                     [:lasgn, :y, [:call, :'dt.stack_pop', [:args, nil]]],
+                                     [:lasgn, :x, [:call, :'dt.stack_pop', [:args, nil]]],
+                                     [:lasgn, :res, [:binop, :sdiv, [:lvar, :x], [:lvar, :y]]],
+                                     [:call, :'dt.stack_push', [:args, [:lvar, :res]]]]
+                                   DT_MAIN_RET_EXP
+                                 ]
+                               ],
       DT_EXAMPLES[:label]   => [:module,
                                  DT_MAIN_EXP.dup +
                                  [
