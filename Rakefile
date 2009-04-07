@@ -16,11 +16,11 @@ AUTHOR            = "faultier"
 EMAIL             = "roteshund+github@gmail.com"
 DESCRIPTION       = "Esoteric langage compilers and virtual machines"
 HOMEPATH          = "http://blog.livedoor.jp/faultier/"
-BIN_FILES         = %w(bf dt esoc tetete ws)
+BIN_FILES         = %w(esoc)
 
 VERS              = Esoteric::VERSION
 REV = File.read(".svn/entries")[/committed-rev="(d+)"/, 1] rescue nil
-CLEAN.include ['**/.*.sw?', '*.gem', '.config', 'ext/*.bc']
+CLEAN.include ['**/.*.sw?', '*.gem', '.config', '{ext,lib}/*.bc']
 RDOC_OPTS = [
 	'--title', "#{NAME} documentation",
 	"--charset", "utf-8",
@@ -121,7 +121,9 @@ SPEC_CONTEXT = lambda {|t|
 }
 
 desc "Build runtime libraries"
-task :compile => %w(ext/dt_runtime.bc)
+task :compile => %w(ext/dt_runtime.bc) do |t|
+  t.prerequisites.each { |file| sh "mv #{file} lib" }
+end
 
 rule '.bc' => '.ll' do |t|
   sh "llvm-as -f -o #{t} #{t.source}"

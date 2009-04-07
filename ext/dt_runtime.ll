@@ -64,3 +64,21 @@ return:
     call void @dt.stack_push(i32 %val)
     ret void
 }
+
+declare i32 @printf(i8 *, ...)
+
+@.FORM1 = internal constant [3 x i8] c"%c\00"
+define void @dt.char_out() {
+    %form = getelementptr [3 x i8]* @.FORM1, i64 0, i64 0
+    %i    = call i32 @dt.stack_pop()
+    call i32 (i8 *, ...)* @printf(i8 * %form, i32 %i)
+    ret void
+}
+
+@.FORM2 = internal constant [3 x i8] c"%d\00"
+define void @dt.num_out() {
+    %form = getelementptr [3 x i8]* @.FORM2, i64 0, i64 0
+    %i    = call i32 @dt.stack_pop()
+    call i32 (i8 *, ...)* @printf(i8 * %form, i32 %i)
+    ret void
+}

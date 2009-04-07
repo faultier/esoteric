@@ -6,7 +6,6 @@ require 'esoteric/dt'
 require 'esoteric/tetete'
 require 'esoteric/whitespace'
 require 'optparse'
-require 'ruby2ruby'
 
 options = {
   :outfile => 'eso.out',
@@ -14,35 +13,51 @@ options = {
 OptionParser.new { |opt|
   opt.on('-o FILENAME') { |v| options[:outfile] = v }
   opt.on('-l LANGNAME', '--language=LANGNAME') { |v| options[:language] = v }
+  opt.on('-c') { options[:compile_only] = true }
+  opt.on('--verbose') { options[:verbose] = true }
   opt.on('-v', '--version') {
-    puts <<-"EOS"
-esoteric #{Esoteric::VERSION}
-ruby2ruby #{Ruby2Ruby::VERSION}
-    EOS
+    puts "esoteric #{Esoteric::VERSION}"
     exit 0
   }
 
   opt.parse!(ARGV)
 }
+require 'pp' if options[:verbose]
+require 'yaml' if options[:verbose]
 
-options[:language] ||= case ARGV.first
-                       when /\.bf\z/  then 'brainfuck'
-                       when /\.dt\z/  then 'dt'
-                       when /\.ttt\z/ then 'てってってー'
-                       when /\.ws\z/  then 'whitespace'
-                       end
+options[:language] = case options[:language]
+                     when /\A(brainf[u*]ck|bf)\z/  then :bf
+                     when 'dt'                     then :dt
+                     when 'てってってー','tetete'  then :ttt
+                     when 'whitespace','ws'        then :ws
+                     end
 
-parser = case options[:language]
-         when /\A(brainf[u*]ck|bf)\z/  then Esoteric::Brainfuck::Parser
-         when 'dt'                     then Esoteric::DT::Parser
-         when 'てってってー','tetete'  then Esoteric::Tetete::Parser
-         when 'whitespace','ws'        then Esoteric::Whitespace::Parser
-         end
+case options[:language]
+when :bf  then include Esoteric::Brainfuck
+when :dt  then include Esoteric::DT
+when :ttt then include Esoteric::Tetete
+when :ws  then include Esoteric::Whitespace
+else raise RuntimeError, 'そんな言語ないよ'
+end
 
-ast       = parser.parse(ARGF.read)
-processor = Ruby2Ruby.new
+object_files = []
+ARGV.each do |filename|
+  basename = File.basename(filename, ".#{options[:language]}")
+  source   = open(filename) {|f| f.read }
+  parsed   = Parser.parse(source)
+  pp parsed if options[:verbose]
+  puts parsed.to_yaml if options[:verbose]
+  formed   = PreProcessor.process(parsed)
+  pp formed if options[:verbose]
+  compiler = Esoteric::Compiler.new
+  compiler.init_llvm_module_with_name options[:language].to_s
+  m = compiler.process(formed)
+  p m if options[:verbose]
+  m.write_bitcode "#{basename}.o"
+  object_files << "#{basename}.o"
+end
 
-open(options[:outfile], 'w+') { |f|
-  f.print %(#!/usr/bin/env ruby\n# coding: utf-8\n#{processor.process(Sexp.from_array(ast))})
-  f.chmod 0755
-}
+unless options[:compile_only]
+  runtime = Dir.glob("{#{$:.join(',')}}/#{options[:language]}_runtime.bc")
+  system "llvm-ld #{runtime.first} #{object_files.join(' ')} -o #{options[:outfile]}"
+end

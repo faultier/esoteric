@@ -1,9 +1,0 @@
-#!/usr/bin/env ruby
-# vim: fileencoding=utf-8 filetype=ruby :
-
-require 'esoteric/tetete'
-require 'esoteric/easyvm'
-require 'esoteric/runner'
-$esoteric_bin_version = "esoteric #{Esoteric::VERSION}, てってってー #{Esoteric::Tetete::VERSION}"
-source, options = Esoteric::Runner.parse_option
-Esoteric::Runner.run(source, Esoteric::Tetete::Parser, Esoteric::EasyVM, options)

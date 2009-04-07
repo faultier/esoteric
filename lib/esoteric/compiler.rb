@@ -25,7 +25,7 @@ module Esoteric
       file_name ||= "#{module_nane}.o"
       compiler = new
       compiler.init_llvm_module(module_name)
-      compiler.compile(sexpr)
+      compiler.process(sexpr)
       m.write_bitcode(file_name)
     end
 
@@ -128,7 +128,7 @@ module Esoteric
     end
 
     def process_args(exp)
-      Sexp.new(*list_exp(exp))
+      res = Sexp.new(*list_exp(exp))
     end
 
     def process_arg(exp)

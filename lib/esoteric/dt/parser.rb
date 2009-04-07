@@ -18,10 +18,10 @@ module Esoteric
       SWAP    = /ど…童貞ちゃうわっ！/ # not yet
       DISCARD = /ど……/
       SLIDE   = /ど童貞ちゃうわっ！…#{NVAL}/ # not yet
-      ADD     = /童貞ちゃうわっ！どどど/ # not yet
-      SUB     = /童貞ちゃうわっ！どど童貞ちゃうわっ！/ # not yet
-      MUL     = /童貞ちゃうわっ！どど…/ # not yet
-      DIV     = /童貞ちゃうわっ！ど童貞ちゃうわっ！ど/ # not yet
+      ADD     = /童貞ちゃうわっ！どどど/
+      SUB     = /童貞ちゃうわっ！どど童貞ちゃうわっ！/
+      MUL     = /童貞ちゃうわっ！どど…/
+      DIV     = /童貞ちゃうわっ！ど童貞ちゃうわっ！ど/
       MOD     = /童貞ちゃうわっ！ど童貞ちゃうわっ！童貞ちゃうわっ！/ # not yet
       HWRITE  = /童貞ちゃうわっ！童貞ちゃうわっ！ど/ # not yet
       HREAD   = /童貞ちゃうわっ！童貞ちゃうわっ！童貞ちゃうわっ！/ # not yet
@@ -31,9 +31,9 @@ module Esoteric
       JUMPZ   = /…童貞ちゃうわっ！ど#{LVAL}/
       JUMPN   = /…童貞ちゃうわっ！童貞ちゃうわっ！#{LVAL}/
       RETURN  = /…童貞ちゃうわっ！…/
-      EXIT    = /………/ # not yet
-      COUT    = /童貞ちゃうわっ！…どど/ # not yet
-      NOUT    = /童貞ちゃうわっ！…ど童貞ちゃうわっ！/ # not yet
+      EXIT    = /………/
+      COUT    = /童貞ちゃうわっ！…どど/
+      NOUT    = /童貞ちゃうわっ！…ど童貞ちゃうわっ！/
       CIN     = /童貞ちゃうわっ！…童貞ちゃうわっ！ど/ # not yet
       NIN     = /童貞ちゃうわっ！…童貞ちゃうわっ！童貞ちゃうわっ！/ # not yet
 
@@ -73,8 +73,9 @@ module Esoteric
       private
 
       def normalize(src)
+        source = src.dup
         normalized = ''
-        normalized << $1 while src.sub!(/(ど|童貞ちゃうわっ！|…)/, '*')
+        normalized << $1 while source.sub!(/(ど|童貞ちゃうわっ！|…)/, '*')
         normalized
       end
 
@@ -103,49 +104,32 @@ module Esoteric
         when @s.scan(PUSH)    then [:call, :'dt.stack_push', [:args, [:lit, numeric(@s[1])]]]
         when @s.scan(DUP)     then [:call, :'dt.stack_dup', [:args, nil]]
         when @s.scan(COPY)    then [:call, :'dt.stack_copy', [:args, [:lit, numeric(@s[1])]]]
-#       when @s.scan(SWAP)    then exp_push exp_pop, exp_pop
+        when @s.scan(SWAP)    then raise NotImplementedError, 'SWAP'
         when @s.scan(DISCARD) then [:call, :'dt.stack_pop', [:args, nil]]
-#       when @s.scan(SLIDE)
-#         exp_block { |block|
-#           block << exp_lasgn(:top, exp_gvarcall(:stack, :pop))
-#           block << exp_iterator(exp_mcall(exp_literal(numeric(@s[1])), :times)) {|internal| internal << exp_pop}
-#           block << exp_push(exp_lvar(:top))
-#         }
-#       when @s.scan(ADD)
-#         exp_block { |block|
-#           block << exp_lmasgn([:y, :x], [exp_pop, exp_pop])
-#           block << exp_mcallpush(exp_lvar(:x), :+, exp_lvar(:y))
-#         }
-#       when @s.scan(SUB)
-#         exp_block { |block|
-#           block << exp_lmasgn([:y, :x], [exp_pop, exp_pop])
-#           block << exp_mcallpush(exp_lvar(:x), :-, exp_lvar(:y))
-#         }
-#       when @s.scan(MUL)
-#         exp_block { |block|
-#           block << exp_lmasgn([:y, :x], [exp_pop, exp_pop])
-#           block << exp_mcallpush(exp_lvar(:x), :*, exp_lvar(:y))
-#         }
-#       when @s.scan(DIV)
-#         exp_block { |block|
-#           block << exp_lmasgn([:y, :x], [exp_pop, exp_pop])
-#           block << exp_mcallpush(exp_lvar(:x), :/, exp_lvar(:y))
-#         }
-#       when @s.scan(MOD)
-#         exp_block { |block|
-#           block << exp_lmasgn([:y, :x], [exp_pop, exp_pop])
-#           block << exp_mcallpush(exp_lvar(:x), :%, exp_lvar(:y))
-#         }
-#       when @s.scan(HWRITE)
-#         exp_block { |block|
-#           block << exp_lmasgn([:val, :addr], [exp_pop, exp_pop])
-#           block << exp_attribute_assign(exp_gvar(:heap), :[]=, exp_lvar(:addr), exp_lvar(:val))
-#         }
-#       when @s.scan(HREAD)
-#         exp_block { |block|
-#           block << exp_lasgn(:addr, exp_pop)
-#           block << exp_push(exp_gvarcall(:heap, :[], exp_lvar(:addr)))
-#         }
+        when @s.scan(SLIDE)   then raise NotImplementedError, 'SLIDE'
+        when @s.scan(ADD)
+          current_block.push [:lasgn, :y, [:call, :'dt.stack_pop', [:args, nil]]]
+          current_block.push [:lasgn, :x, [:call, :'dt.stack_pop', [:args, nil]]]
+          current_block.push [:lasgn, :res, [:binop, :add, [:lvar, :x], [:lvar, :y]]]
+          [:call, :'dt.stack_push', [:args, [:lvar, :res]]]
+        when @s.scan(SUB)
+          current_block.push [:lasgn, :y, [:call, :'dt.stack_pop', [:args, nil]]]
+          current_block.push [:lasgn, :x, [:call, :'dt.stack_pop', [:args, nil]]]
+          current_block.push [:lasgn, :res, [:binop, :sub, [:lvar, :x], [:lvar, :y]]]
+          [:call, :'dt.stack_push', [:args, [:lvar, :res]]]
+        when @s.scan(MUL)
+          current_block.push [:lasgn, :y, [:call, :'dt.stack_pop', [:args, nil]]]
+          current_block.push [:lasgn, :x, [:call, :'dt.stack_pop', [:args, nil]]]
+          current_block.push [:lasgn, :res, [:binop, :mul, [:lvar, :x], [:lvar, :y]]]
+          [:call, :'dt.stack_push', [:args, [:lvar, :res]]]
+        when @s.scan(DIV)
+          current_block.push [:lasgn, :y, [:call, :'dt.stack_pop', [:args, nil]]]
+          current_block.push [:lasgn, :x, [:call, :'dt.stack_pop', [:args, nil]]]
+          current_block.push [:lasgn, :res, [:binop, :sdiv, [:lvar, :x], [:lvar, :y]]]
+          [:call, :'dt.stack_push', [:args, [:lvar, :res]]]
+        when @s.scan(MOD)     then raise NotImplementedError, 'MOD'
+        when @s.scan(HWRITE)  then raise NotImplementedError, 'HWRITE'
+        when @s.scan(HREAD)   then raise NotImplementedError, 'HREAD'
         when @s.scan(LABEL)   then [:block, string(@s[1]).intern]
         when @s.scan(CALL)    then [:call, string(@s[1]).intern, [:args, nil]]
         when @s.scan(JUMP)    then [:jump, string(@s[1]).intern]
@@ -186,9 +170,10 @@ module Esoteric
           cb.push [:ret, [:lit, :void]]
           func = [:define, [:type, :void], label, [:args, nil], cb]
           func
-#       when @s.scan(EXIT)    then exp_fcall :exit, exp_literal(0)
-#       when @s.scan(COUT)    then exp_gvarcall :stdout, :print, exp_mcall(exp_pop, :chr)
-#       when @s.scan(NOUT)    then exp_gvarcall :stdout, :print, exp_mcall(exp_pop, :to_i)
+        when @s.scan(EXIT)    then
+          current_function[2] == :main ? [:jump, :return] : nil
+        when @s.scan(COUT)    then [:call, :'dt.char_out', [:args, nil]]
+        when @s.scan(NOUT)    then [:call, :'dt.number_out', [:args, nil]]
 #       when @s.scan(CIN)     then exp_mcallpush exp_gvarcall(:stdin, :getc), :ord
 #       when @s.scan(NIN)     then exp_mcallpush exp_gvarcall(:stdin, :getc), :to_i
         else raise SyntaxError
