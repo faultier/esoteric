@@ -20,7 +20,7 @@ BIN_FILES         = %w(esoc)
 
 VERS              = Esoteric::VERSION
 REV = File.read(".svn/entries")[/committed-rev="(d+)"/, 1] rescue nil
-CLEAN.include ['**/.*.sw?', '*.gem', '.config', '{ext,lib}/*.bc']
+CLEAN.include ['**/.*.sw?', '*.gem', '.config', 'ext/*.bc', 'lib/*.o']
 RDOC_OPTS = [
 	'--title', "#{NAME} documentation",
 	"--charset", "utf-8",
@@ -56,7 +56,7 @@ spec = Gem::Specification.new do |s|
 
 	s.files = %w(README ChangeLog Rakefile) +
 		Dir.glob("{bin,doc,spec,lib,templates,generator,extras,website,script}/**/*") + 
-		Dir.glob("ext/**/*.{h,c,rb}") +
+#	Dir.glob("ext/**/*.{h,c,rb}") +
 		Dir.glob("examples/**/*.rb") +
 		Dir.glob("tools/*.rb") +
 
@@ -122,7 +122,7 @@ SPEC_CONTEXT = lambda {|t|
 
 desc "Build runtime libraries"
 task :compile => %w(ext/dt_runtime.bc) do |t|
-  t.prerequisites.each { |file| sh "mv #{file} lib" }
+  t.prerequisites.each { |bc| sh "mv #{bc} lib" }
 end
 
 rule '.bc' => '.ll' do |t|
