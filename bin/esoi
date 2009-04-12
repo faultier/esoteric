@@ -11,15 +11,11 @@ LANGUAGES = [:brainfuck, :dt, :tetete, :whitespace]
 LANGUAGE_ALIASES = { :bf => :brainfuck, :ttt => :tetete, :ws => :whitespace }
 
 options = {
-  :outfile   => 'eso.out',
   :libraries => [],
 }
 OptionParser.new { |opt|
-  opt.on('-o FILENAME') { |v| options[:outfile] = v }
   opt.on('-x LANGUAGE', LANGUAGES, LANGUAGE_ALIASES) { |v| options[:language] = v }
   opt.on('-l LIBRARY') { |v| options[:libraries] << v }
-  opt.on('-c') { options[:compile_only] = true }
-  opt.on('--verbose') { options[:verbose] = true }
   opt.on('-v', '--version') {
     puts "esoteric #{Esoteric::VERSION}"
     exit 0
@@ -27,14 +23,17 @@ OptionParser.new { |opt|
 
   opt.parse!(ARGV)
 }
-require 'pp' if options[:verbose]
-require 'yaml' if options[:verbose]
 
-options[:language] = case ARGV.first
-                     when /\.bf\z/  then :brainfuck
-                     when /\.dt\z/  then :dt
-                     when /\.ttt\z/ then :tetete
-                     when /\.ws\z/  then :whitespace
+binfile  = ARGV.first
+ext      = File.extname(binfile)
+basename = File.basename(binfile, ext)
+bitcode  = "#{binfile}.bc"
+
+options[:language] = case ext
+                     when '.bf'  then :brainfuck
+                     when '.dt'  then :dt
+                     when '.ttt' then :tetete
+                     when '.ws'  then :whitespace
                      end
 case options[:language]
 when :brainfuck  then include Esoteric::Brainfuck
@@ -44,23 +43,19 @@ when :whitespace then include Esoteric::Whitespace
 else raise RuntimeError, 'そんな言語ないよ'
 end
 
-object_files = options[:compile_only] ? [] : [Dir.glob("{#{$:.join(',')}}/#{options[:language]}_runtime.bc").first]
-ARGV.each do |filename|
-  basename = File.basename(filename, ".#{options[:language]}")
-  print "compile #{filename} => #{basename}.o" if options[:verbose]
-  source   = PreProcessor.process( open(filename) {|f| f.read } )
+unless FileTest.exist?(bitcode) && File::Stat.new(bitcode).mtime > File::Stat.new(binfile).mtime
+  source   = PreProcessor.process(ARGF.read)
   ast      = Sexp.from_array(Parser.parse(source))
   compiler = Esoteric::Compiler.new
   compiler.init_llvm_module_with_name options[:language].to_s
   m = compiler.process(ast)
-  m.write_bitcode "#{basename}.o"
-  object_files << "#{basename}.o"
-  puts "\tdone!" if options[:verbose]
+  m.write_bitcode bitcode
 end
 
-command = options[:compile_only] ? %w(llvm-link -f) : %w(llvm-ld -strip-all)
+command = %w(llvm-ld -strip-all)
 command += options[:libraries].map{ |libname| ['-l', libname] }
-command += object_files
-command += ['-o', options[:outfile]]
-puts command.join(' ') if options[:verbose]
+command += [Dir.glob("{#{$:.join(',')}}/#{options[:language]}_runtime.bc").first, bitcode]
+command += ['-o', "/tmp/#{basename}"]
 system command.join(' ')
+system "lli /tmp/#{basename}.bc"
+system "rm /tmp/#{basename}{,.bc}"
