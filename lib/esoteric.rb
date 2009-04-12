@@ -1,5 +1,7 @@
 # coding: utf-8
 
+require 'esoteric/runtime'
+require 'esoteric/preprocessor'
 require 'esoteric/parser'
 require 'esoteric/compiler'
 require 'esoteric/vm'

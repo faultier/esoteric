@@ -41,23 +41,23 @@ else raise RuntimeError, 'そんな言語ないよ'
 end
 
 object_files = []
+libs         = []
 ARGV.each do |filename|
   basename = File.basename(filename, ".#{options[:language]}")
   source   = open(filename) {|f| f.read }
-  parsed   = Parser.parse(source)
-  pp parsed if options[:verbose]
-  puts parsed.to_yaml if options[:verbose]
-  formed   = PreProcessor.process(parsed)
-  pp formed if options[:verbose]
+  data     = PreProcessor.process(source)
+  parsed   = Parser.parse(data[:source])
+  ast      = Sexp.from_array([:module, data[:declares] + parsed[1..-1]])
+  libs += data[:libs]
+  next
   compiler = Esoteric::Compiler.new
   compiler.init_llvm_module_with_name options[:language].to_s
-  m = compiler.process(formed)
-  p m if options[:verbose]
+  m = compiler.process(parsed)
   m.write_bitcode "#{basename}.o"
   object_files << "#{basename}.o"
 end
 
 unless options[:compile_only]
-  runtime = Dir.glob("{#{$:.join(',')}}/#{options[:language]}_runtime.bc")
-  system "llvm-ld #{runtime.first} #{object_files.join(' ')} -o #{options[:outfile]}"
+  libs = Dir.glob("{#{$:.join(',')}}/#{libs.join(',')}.bc")
+  system "llvm-ld #{libs.join(' ')} #{object_files.join(' ')} -o #{options[:outfile]}"
 end
