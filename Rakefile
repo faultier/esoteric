@@ -16,11 +16,11 @@ AUTHOR            = "faultier"
 EMAIL             = "roteshund+github@gmail.com"
 DESCRIPTION       = "Esoteric langage compilers and virtual machines"
 HOMEPATH          = "http://blog.livedoor.jp/faultier/"
-BIN_FILES         = %w(esoc)
+BIN_FILES         = %w(esoc esoi)
 
 VERS              = Esoteric::VERSION
 REV = File.read(".svn/entries")[/committed-rev="(d+)"/, 1] rescue nil
-CLEAN.include ['**/.*.sw?', '*.gem', '.config', 'ext/*.bc', 'lib/*.o']
+CLEAN.include ['**/.*.sw?', '*.gem', '.config', 'ext/*.bc']
 RDOC_OPTS = [
 	'--title', "#{NAME} documentation",
 	"--charset", "utf-8",
@@ -50,7 +50,7 @@ spec = Gem::Specification.new do |s|
 	s.require_path      = "lib"
 	#s.autorequire       = ""
 
-  s.add_dependency('ruby2ruby', '>= 1.2.2')
+# s.add_dependency('ruby2ruby', '>= 1.2.2')
 
 	s.required_ruby_version = '>= 1.8.6'
 
